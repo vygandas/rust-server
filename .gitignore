@@ -1,0 +1,25 @@
+# Environment files
+.env
+
+# Server data (saves, player data, etc.)
+server_data/
+
+# Docker volumes
+volumes/
+
+# Backup files
+*.backup
+*.bak
+backups/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/

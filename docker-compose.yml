@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  rust-server:
+    build:
+      context: .
+      args:
+        # Force aux01 staging branch during build
+        RUST_BRANCH: "-beta aux01"
+        RUST_BRANCH_PASSWORD: ""
+    image: rust-server-aux01:latest
+    container_name: rust-server-aux01
+    restart: unless-stopped
+
+    # Network mode for better performance
+    network_mode: bridge
+
+    ports:
+      # Game port (UDP/TCP) - Main game traffic
+      - "28015:28015/udp"
+      - "28015:28015/tcp"
+      # Query port (UDP) - Server browser queries
+      - "28017:28017/udp"
+      # RCON port (TCP) - Remote administration
+      - "28016:28016/tcp"
+      # Web RCON (TCP) - Web-based RCON interface
+      - "28080:28080/tcp"
+      # Rust+ Companion App port (TCP)
+      - "28082:28082/tcp"
+
+    environment:
+      # === BRANCH CONFIGURATION ===
+      RUST_BRANCH: "-beta aux01"
+      RUST_UPDATE_ON_START: "true"
+
+      # === SERVER IDENTITY ===
+      RUST_SERVER_IDENTITY: "aux01_staging_test"
+      RUST_SERVER_HOSTNAME: "BnF aux01 Staging Test Server"
+      RUST_SERVER_DESCRIPTION: "Blood & Fire - Testing aux01 staging branch features"
+      RUST_SERVER_URL: ""  # Optional: Your website/discord
+      RUST_SERVER_BANNER: ""  # Optional: 512x256 PNG URL
+      RUST_SERVER_LOGO: ""  # Optional: 256x256 PNG URL
+
+      # === NETWORK CONFIGURATION ===
+      RUST_SERVER_IP: "0.0.0.0"
+      RUST_SERVER_PORT: 28015
+      RUST_QUERY_PORT: 28017
+      RUST_RCON_IP: "0.0.0.0"
+      RUST_RCON_PORT: 28016
+      RUST_RCON_PASSWORD: "ChangeThisSecurePassword123!"  # IMPORTANT: CHANGE THIS!
+      RUST_RCON_WEB: 1
+      RUST_APP_PORT: 28082
+      RUST_APP_PUBLICIP: ""  # Set your public IP for Rust+ app if needed
+
+      # === WORLD CONFIGURATION ===
+      RUST_SERVER_LEVEL: "Procedural Map"  # Or custom map name
+      RUST_SERVER_SEED: 1337  # Change for different map generation
+      RUST_SERVER_WORLDSIZE: 3500  # Range: 1000-6000 (3500 is good for testing)
+      RUST_SERVER_MAXPLAYERS: 100  # Max concurrent players
+
+      # === PERFORMANCE SETTINGS ===
+      RUST_SERVER_TICKRATE: 30  # Server tick rate (10-30)
+      RUST_SERVER_SAVE_INTERVAL: 300  # Auto-save every 5 minutes
+
+      # === GAMEPLAY SETTINGS ===
+      RUST_SERVER_GLOBALCHAT: "true"  # Enable global chat
+      RUST_SERVER_PVE: "false"  # PvE mode (false for PvP)
+      RUST_SERVER_STABILITY: "true"  # Building stability
+      RUST_DECAY_TICK: 300  # Decay tick rate
+      RUST_DECAY_SCALE: 1  # Decay multiplier (0 = no decay)
+
+      # === SECURITY & ANTI-CHEAT ===
+      RUST_SERVER_SECURE: "true"  # EAC enabled
+      RUST_SERVER_ENCRYPTION: 2  # Network encryption level
+      RUST_ANTICHEAT_LOG: 1  # Log anti-cheat events
+
+      # === MODDING FRAMEWORKS ===
+      RUST_OXIDE_ENABLED: "false"  # Enable Oxide/uMod
+      RUST_CARBON_ENABLED: "false"  # Enable Carbon (alternative to Oxide)
+
+      # === SERVER BROWSER TAGS ===
+      RUST_SERVER_TAGS: "staging,aux01,testing,bnf"  # Comma-separated tags
+
+      # === LOGGING ===
+      RUST_LOG_FILE: "/home/steam/rust_server/server_data/server.log"
+
+    volumes:
+      # Main server data (world saves, player data, etc.)
+      - ./server_data:/home/steam/rust_server/server_data
+
+      # Oxide plugins and data (if using Oxide)
+      - ./oxide_data:/home/steam/rust_server/oxide
+
+      # Carbon plugins and data (if using Carbon)
+      - ./carbon_data:/home/steam/rust_server/carbon
+
+      # Server configuration files
+      - ./server_cfg:/home/steam/rust_server/cfg
+
+      # Optional: Custom maps
+      - ./custom_maps:/home/steam/rust_server/maps
+
+    # Resource limits - adjust based on your server specs
+    deploy:
+      resources:
+        limits:
+          memory: 16G  # Maximum memory (recommended for aux01)
+          cpus: '4.0'  # Maximum CPU cores
+        reservations:
+          memory: 8G   # Minimum guaranteed memory
+          cpus: '2.0'  # Minimum guaranteed CPU cores
+
+    # Improved health check
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f RustDedicated && nc -z localhost 28016"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 15m  # aux01 can take longer to start
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+    # Shared memory size for better performance
+    shm_size: 1gb
+
+# Optional: Add a separate RCON web interface container
+  rcon-web:
+    image: itzg/rcon
+    container_name: rust-rcon-web
+    restart: unless-stopped
+    ports:
+      - "4326:4326"  # Web interface port
+      - "4327:4327"  # WebSocket port
+    environment:
+      RWA_USERNAME: admin  # Change this
+      RWA_PASSWORD: changeme  # Change this
+      RWA_ADMIN: "true"
+      RWA_RCON_HOST: rust-server
+      RWA_RCON_PORT: 28016
+      RWA_RCON_PASSWORD: "ChangeThisSecurePassword123!"  # Must match RUST_RCON_PASSWORD
+    depends_on:
+      - rust-server
+    networks:
+      - default
+
+# Network configuration
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
