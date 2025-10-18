@@ -131,6 +131,17 @@ echo -e "${YELLOW}Max Players: ${RUST_SERVER_MAXPLAYERS:-50}${NC}"
 echo -e "${YELLOW}World Size: ${RUST_SERVER_WORLDSIZE:-3000}${NC}"
 echo -e "${YELLOW}Server Seed: ${RUST_SERVER_SEED:-12345}${NC}"
 
+# Bootstrap admin users from env (writes to users.cfg before launch)
+if [ -n "${RUST_OWNER_ID}" ]; then
+    IDENTITY_DIR="/home/steam/rust_server/server/${RUST_SERVER_IDENTITY:-aux01_test}/cfg"
+    USERS_CFG="${IDENTITY_DIR}/users.cfg"
+    mkdir -p "${IDENTITY_DIR}"
+    if [ -f "${USERS_CFG}" ]; then
+        sed -i "/^ownerid ${RUST_OWNER_ID}\\b/d" "${USERS_CFG}"
+    fi
+    echo "ownerid ${RUST_OWNER_ID} \"${RUST_OWNER_NAME:-${RUST_OWNER_ID}}\" \"${RUST_OWNER_REASON:-Bootstrap}\"" >> "${USERS_CFG}"
+fi
+
 # Start the server
 cd /home/steam/rust_server
 exec ./RustDedicated $SERVER_ARGS

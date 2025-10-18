@@ -39,6 +39,11 @@ services:
       RUST_APP_PORT: 28082
       RUST_APP_PUBLICIP: ""  # Set your public IP for Rust+ app if needed
 
+      # === ADMIN BOOTSTRAP ===
+      RUST_OWNER_ID: "76561198145793751"
+      RUST_OWNER_NAME: "WolfInSuit"
+      RUST_OWNER_REASON: "Admin Access"
+
       # === WORLD CONFIGURATION ===
       RUST_SERVER_LEVEL: "Procedural Map"  # Or custom map name
       RUST_SERVER_SEED: 1337  # Change for different map generation
