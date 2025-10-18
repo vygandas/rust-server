@@ -85,10 +85,10 @@ services:
       resources:
         limits:
           memory: 16G  # Maximum memory (recommended for aux01)
-          cpus: '4.0'  # Maximum CPU cores
+          cpus: "${CPU_LIMIT:-2.5}"  # Max CPUs (override in .env for your VPS)
         reservations:
           memory: 8G   # Minimum guaranteed memory
-          cpus: '2.0'  # Minimum guaranteed CPU cores
+          cpus: "${CPU_RESERVATION:-1.5}"  # Reserved CPUs (override in .env)
 
     # Improved health check
     healthcheck:
