@@ -5,33 +5,22 @@ services:
     build:
       context: .
       args:
-        # Force aux01 staging branch during build
-        RUST_BRANCH: "-beta aux01"
+        # Force aux01-staging branch during build
+        RUST_BRANCH: "-beta aux01-staging"
         RUST_BRANCH_PASSWORD: ""
     image: rust-server-aux01:latest
     container_name: rust-server-aux01
     restart: unless-stopped
 
-    # Network mode for better performance
-    network_mode: bridge
+    # Use host network mode for direct port exposure
+    network_mode: host
 
-    ports:
-      # Game port (UDP/TCP) - Main game traffic
-      - "28015:28015/udp"
-      - "28015:28015/tcp"
-      # Query port (UDP) - Server browser queries
-      - "28017:28017/udp"
-      # RCON port (TCP) - Remote administration
-      - "28016:28016/tcp"
-      # Web RCON (TCP) - Web-based RCON interface
-      - "28080:28080/tcp"
-      # Rust+ Companion App port (TCP)
-      - "28082:28082/tcp"
+    # Ports are directly exposed via host network mode (no mapping needed)
 
     environment:
       # === BRANCH CONFIGURATION ===
-      RUST_BRANCH: "-beta aux01"
-      RUST_UPDATE_ON_START: "true"
+      RUST_BRANCH: "-beta aux01-staging"
+      RUST_UPDATE_ON_START: "false"
 
       # === SERVER IDENTITY ===
       RUST_SERVER_IDENTITY: "aux01_staging_test"
@@ -137,25 +126,13 @@ services:
     image: itzg/rcon
     container_name: rust-rcon-web
     restart: unless-stopped
-    ports:
-      - "4326:4326"  # Web interface port
-      - "4327:4327"  # WebSocket port
+    network_mode: host
     environment:
       RWA_USERNAME: admin  # Change this
       RWA_PASSWORD: changeme  # Change this
       RWA_ADMIN: "true"
-      RWA_RCON_HOST: rust-server
+      RWA_RCON_HOST: localhost
       RWA_RCON_PORT: 28016
       RWA_RCON_PASSWORD: "ChangeThisSecurePassword123!"  # Must match RUST_RCON_PASSWORD
     depends_on:
       - rust-server
-    networks:
-      - default
-
-# Network configuration
-networks:
-  default:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
