@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   rust-server:
     build:
@@ -71,23 +69,11 @@ services:
       RUST_SERVER_TAGS: "staging,aux01,testing,bnf"  # Comma-separated tags
 
       # === LOGGING ===
-      RUST_LOG_FILE: "/home/steam/rust_server/server_data/server.log"
+      RUST_LOG_FILE: "/dev/stdout"
 
     volumes:
       # Main server data (world saves, player data, etc.)
-      - ./server_data:/home/steam/rust_server/server_data
-
-      # Oxide plugins and data (if using Oxide)
-      - ./oxide_data:/home/steam/rust_server/oxide
-
-      # Carbon plugins and data (if using Carbon)
-      - ./carbon_data:/home/steam/rust_server/carbon
-
-      # Server configuration files
-      - ./server_cfg:/home/steam/rust_server/cfg
-
-      # Optional: Custom maps
-      - ./custom_maps:/home/steam/rust_server/maps
+      - ./server_data:/home/steam/rust_server/server:rw
 
     # Resource limits - adjust based on your server specs
     deploy:
@@ -135,4 +121,5 @@ services:
       RWA_RCON_PORT: 28016
       RWA_RCON_PASSWORD: "ChangeThisSecurePassword123!"  # Must match RUST_RCON_PASSWORD
     depends_on:
-      - rust-server
+      rust-server:
+        condition: service_healthy

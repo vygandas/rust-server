@@ -112,7 +112,7 @@ SERVER_ARGS="$SERVER_ARGS +server.encryption ${RUST_SERVER_ENCRYPTION:-2}"
 SERVER_ARGS="$SERVER_ARGS +server.anticheatlog ${RUST_ANTICHEAT_LOG:-1}"
 
 # Logging
-SERVER_ARGS="$SERVER_ARGS -logfile \"${RUST_LOG_FILE:-/home/steam/rust_server/server_data/server.log}\""
+SERVER_ARGS="$SERVER_ARGS -logfile \"${RUST_LOG_FILE:-/dev/stdout}\""
 
 # Optional: Tags for server browser
 if [ -n "${RUST_SERVER_TAGS}" ]; then
